@@ -7,13 +7,25 @@ from argparse import ArgumentParser
 from urllib.parse import quote, unquote, urlencode
 from urllib.request import urlopen, Request,urlretrieve
 import replicate
+import datetime
+from transformers import AutoProcessor, MusicgenForConditionalGeneration
+
+
+processor = AutoProcessor.from_pretrained("facebook/musicgen-large")
+model = MusicgenForConditionalGeneration.from_pretrained("facebook/musicgen-large")
+
+inputs = processor(
+    text=["80s pop track with bassy drums and synth", "90s rock song with loud guitars and heavy drums"],
+    padding=True,
+    return_tensors="pt",
+)
 
 
 CURRENT_DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 URL_API = "https://www.lalal.ai/api/"
 
-key="###"
-REPLICATE_API_TOKEN="####"
+key=""
+REPLICATE_API_TOKEN=""
 def update_percent(pct):
     pct = str(pct)
     sys.stdout.write("\b" * len(pct))
@@ -159,12 +171,6 @@ def batch_process(license, input_path, output_path, stem, filter_type, splitter)
 
 
 def main():
-    output = replicate.run(
-    "facebookresearch/musicgen:7a76a8258b23fae65c5a22debb8841d1d7e816b75c2f24218cd2bd8573787906",
-    input={"model_version": "melody","prompt":"Edo25 major g melodies that sound triumphant and cinematic. Leading up to a crescendo that resolves in a 9th harmonic","input_audio":"https://github.com/jamesthesnake/stem-remixer/blob/main/stripes.mp3"}
-)
-    print(output)
-    urlretrieve(output,"hereyr.wav")
     parser = ArgumentParser(description='Lalalai splitter')
     parser.add_argument('--prompt',type=str)
     parser.add_argument('--input', type=str, required=True, help='Input directory or a file')
@@ -178,6 +184,12 @@ def main():
     os.makedirs(args.output, exist_ok=True)
     batch_process(key, args.input, args.output, args.stem, args.filter, args.splitter)
 
+    output = replicate.run(
+    "facebookresearch/musicgen:7a76a8258b23fae65c5a22debb8841d1d7e816b75c2f24218cd2bd8573787906",
+    input={"model_version": "melody","prompt":args.prompt,"input_audio":"https://github.com/jamesthesnake/stem-remixer/blob/main/stripes.mp3"}
+)
+    print(output)
+    urlretrieve(output,"hereyr.wav")
 
 if __name__ == '__main__':
     try:
